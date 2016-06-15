@@ -5,7 +5,7 @@ Created on 2016. 6. 15.
 '''
 from directed_hypergraph import DirectedHypergraph
 
-def ACOAlgorithm(H: DirectedHypergraph, col_num, ant_num):
+def acoAlgorithm(H: DirectedHypergraph, col_num, ant_num):
     #initialisation
     v_opt = 0.0
     hg = DirectedHypergraph()
@@ -26,7 +26,7 @@ def ACOAlgorithm(H: DirectedHypergraph, col_num, ant_num):
             ant++
         col++
     
-def ACOSearch():
+def acoSearch():
     
 def calculateUtility(node_list):
     

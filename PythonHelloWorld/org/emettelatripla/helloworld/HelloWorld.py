@@ -54,6 +54,7 @@ for hyperedge in source_edges:
     print(H.get_hyperedge_attributes(hyperedge))
 source_head = H.get_hyperedge_head('e1')
 next_source_edge = random.sample(source_edges, 1)[0]
+print("Weight of this random is "+str(H.get_hyperedge_attribute(next_source_edge, 'weight')))
 print(next_source_edge)
 source_head = H.get_hyperedge_head(next_source_edge)
 for head_node in source_head:
@@ -74,7 +75,7 @@ b = set().union(bD, bE, bF)
 # print("F is: "+str(bF));
 # print("Merge is: "+str(b));
 
-def HgRandomWalk(node_set, hg:DirectedHypergraph):
+def hgRandomWalk(node_set, hg:DirectedHypergraph):
     #check if current node set is sink TBC TBC
     print("--- Visiting (hyper)node: "+str(node_set))
     isSink = False
@@ -92,11 +93,97 @@ def HgRandomWalk(node_set, hg:DirectedHypergraph):
         print("++ Exploring edge: "+str(next_edge))
         #call recursively the head of the chosen hyperdge (node_set)
         next_node_set = H.get_hyperedge_head(next_edge)
-        HgRandomWalk(next_node_set,hg)
+        hgRandomWalk(next_node_set,hg)
+        
+       
+#This utility function simply makes the sum of the costs of all nodes 
+def calculateUtility(hg:DirectedHypergraph):
+    utility = 0.0
+    node_set = hg.get_node_set()
+    for node in node_set:
+        print(str(node))
+        utility = utility + hg.get_node_attribute(node,'cost')
+    return utility
+        
+#this choice function simply picks the edge with highest weight
+def pheroChoice(edge_set, hg:DirectedHypergraph):
+    max = 0
+    max_edge = ()
+    for edge in edge_set:
+        if hg.get_hyperedge_attribute(edge,'weight') > max:
+            max = hg.get_hyperedge_attribute(edge,'weight')
+            max_edge = edge
+    return max_edge
+    
+
+def acoSearch(p:DirectedHypergraph, hg:DirectedHypergraph, node_set):
+    #select next hypeedge from node according to pheromone distribution
+    edge_set = set()
+    for node in node_set:
+        edge_set = set.union(edge_set,hg.get_forward_star(node))
+    #select edge based on value of pheromone attribute
+    next_edge = pheroChoice(edge_set, hg)
+    tail = hg.get_hyperedge_head(next_edge)
+    head = hg.get_hyperedge_tail(next_edge)
+    attrs = hg.get_hyperedge_attributes(next_edge)
+    #add selected hyperedge/node to p
+    print(str(next_edge))
+    print(str(tail))
+    print(str(head))
+    print(str(attrs))
+    p.add_hyperedge(tail, head, attrs)
+    next_head = hg.get_hyperedge_head(next_edge)
+    for node in next_head:
+        p.add_node(node, hg.get_node_attributes(node))
+    #if new node added is sink, then return p
+    isSink = False
+    for node in next_head:
+        if hg.get_node_attribute(node,'sink') == True:
+            isSink = True
+    if isSink == False:
+        acoSearch(p, hg, next_head)
+    #else recursive call
+    return p
+
+
+def acoAlgorithm(node_set, hg:DirectedHypergraph, ANT_NUM, COL_NUM):
+    #ANT_NUM number of ants in one colony
+    #COL_NUM number of colonies
+    p_opt = DirectedHypergraph()
+    utility_opt = 0.0
+    ant = 0
+    col = 0
+    while col < COL_NUM:
+        print("Processing colony n. "+str(col))
+        #do something
+        p = DirectedHypergraph()
+        for node in node_set:
+            p.add_node(node, hg.get_node_attributes(node))
+        while ant < ANT_NUM:
+            print("--- Porcessing ant n. "+str(ant))
+            #call acoSearch on p
+            p = acoSearch(p, hg, node_set)
+            #calculate utility of p
+            utility = calculateUtility(p)
+            #check if p is better than current optimal solution
+            #update if p is optimal
+            if utility > utility_opt:
+                utility_opt = utility
+                p_opt = p
+            ant = ant + 1
+        col = col + 1
+    #do something else
+    
+
         
 print("RANDOMW WALK EXECUTING......")
-HgRandomWalk(['A'],H)
-    
+hgRandomWalk(['A'],H)
+
+
+print("ACO SEARCH EXECUTING...")
+acoAlgorithm(['A'], H, 10, 10)
+
+
 
 
 
